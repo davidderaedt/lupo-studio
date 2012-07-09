@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="462" height="486"
+	enabled="{ pm.bundle.masterPropFile!=null}" 
+	xmlns:view="com.dehats.lupomgr.view.*">
+	
+	<mx:Metadata>
+		[Event(name="preview", type="flash.events.Event")]	
+	</mx:Metadata>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.dehats.lupo.model.PropFileParser;
+			import com.dehats.lupomgr.presentation.MasterFilePanelPM;
+			import com.dehats.lupo.presentation.AssetManager;
+			import mx.events.CloseEvent;
+			import mx.controls.Alert;
+			import mx.events.DataGridEvent;
+			import mx.controls.dataGridClasses.DataGridItemRenderer;
+			import mx.controls.DataGrid;
+			import com.dehats.lupo.model.KeyValuePair;
+			
+			public static const EVENT_PREVIEW:String = "preview";
+			
+			[Bindable]
+			public var pm:MasterFilePanelPM;
+			
+			[Bindable]			
+			private var useWordWrap:Boolean=true;
+			
+			private function addPair():void
+			{
+				pm.addPair(); 
+				dg.selectedIndex = pm.selectedPairIndex;
+				if(pm.selectedPairIndex>=0) dg.scrollToIndex(pm.selectedPairIndex);
+			}
+			
+			private function onItemEdition(pEvt:DataGridEvent):void
+			{
+				
+				var field:String = pEvt.dataField;
+				var pair:KeyValuePair = pEvt.itemRenderer.data as KeyValuePair;
+				var newVal:String = pEvt.currentTarget.itemEditorInstance.text;
+								
+				if( field=="key")
+				{
+					pm.updatePairKey(pair, newVal);
+				} 			
+				
+				pm.touch();				
+			}
+
+		]]>
+	</mx:Script>
+
+
+
+	<mx:HBox x="10" y="10">
+	
+		<mx:Button label="Add Entry"
+			toolTip="Add a new Key/Value pair to this bundle"
+			icon="{ AssetManager.icon_add}"
+			click=" addPair();" x="10" y="10"/>
+						
+		<mx:Button
+			toolTip="Preview the resulting properties file" 
+			click=" dispatchEvent(new Event(EVENT_PREVIEW))"
+			icon="{ AssetManager.icon_preview_file}"
+			label="Preview" 
+			 y="10" x="101"/>
+
+		<mx:Button label="Save"
+			toolTip="Save the changes made to all properties files in this bundle"
+			icon="{ AssetManager.icon_save}"
+			click=" pm.save()" y="10" x="181"/>
+		<mx:Spacer width="20"/>
+		<mx:Image source="{ AssetManager.icon_search}"/>
+		<mx:TextInput id="searchTi"
+			toolTip="Search for a string in the bundle keys, values and translations"
+			change=" pm.searchFilterString=searchTi.text"
+		/>
+			
+	</mx:HBox>
+		
+		
+	<mx:DataGrid id="dg" left="10" right="10" top="38" bottom="16"
+		itemEditEnd=" onItemEdition(event)" headerStyleName="MyDataGridHeader"
+		variableRowHeight="{ useWordWrap}"
+		editable="true"
+		selectable="false"
+		dataProvider="{ pm.keyValuePairCollec }">
+		<mx:columns>
+		
+			<mx:DataGridColumn fontWeight="bold" 
+				headerText="Key" dataField="key" width="160"/>
+				
+			<mx:DataGridColumn fontStyle="italic" color="0x008800" width="160"
+				wordWrap="{ useWordWrap}"
+				editorUsesEnterKey="true"
+				headerText="Comments" 
+				itemEditor="mx.controls.TextArea"
+				dataField="comments" />	
+				
+			<mx:DataGridColumn fontSize="13" color="#000000"
+				headerText="Value for { pm.bundle.masterPropFile.language}" 
+				dataField="value" 
+				wordWrap="{ useWordWrap}"				
+				editorUsesEnterKey="true"
+				itemEditor="mx.controls.TextArea"/>
+				
+			<mx:DataGridColumn headerText="File" dataField="value" width="42"
+				resizable="false"
+				editable="false"
+				rendererIsEditor="true" >
+				<mx:itemRenderer>
+					<mx:Component>
+						<view:IconPreviewRenderer 
+							srcDir="{outerDocument.pm.projectSrc}" />
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			
+			<mx:DataGridColumn headerText=" " dataField="value" width="40" 
+				editable="false" 
+				resizable="false">
+				<mx:itemRenderer>
+					<mx:Component>
+						<mx:Canvas minHeight="24">
+							<mx:Button label="Delete" width="32" horizontalCenter="0" verticalCenter="0"
+								icon="{ parentDocument.pm.icon_delete}"
+								click="parentDocument.pm.askRemovePair(data)"/>							
+						</mx:Canvas>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			
+		</mx:columns>
+	</mx:DataGrid>
+	<mx:CheckBox label="Word wrap" id="wordWrapCB"
+		change=" useWordWrap = wordWrapCB.selected"
+		selected="{useWordWrap}" y="10" right="10"/>
+		
+	<mx:Label x="10" text="{pm.bundle.masterPropFile.keyValuePairCollec.length+' entries'}" styleName="Note" bottom="0"/>
+	
+</mx:Canvas>

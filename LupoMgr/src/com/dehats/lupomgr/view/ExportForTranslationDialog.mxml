@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+	title="Export For Translation"
+	showCloseButton="true"
+	close=" closeMe()" 
+	height="310" width="417">
+	
+
+	<mx:Script>
+		<![CDATA[
+			import com.dehats.lupo.presentation.AssetManager;
+			import mx.collections.ArrayCollection;
+			import com.dehats.lupo.model.ProjectImportExport;
+			import com.dehats.lupo.model.Project;
+			import mx.managers.PopUpManager;
+			
+			[Bindable]
+			private var _project:Project;
+			
+			[Bindable]
+			private var selectedLanguages:ArrayCollection = new ArrayCollection();	
+						
+						
+			public function set project(pProject:Project):void
+			{
+				_project = pProject;
+				//selectedLanguages.addItem(_project.masterLanguage);
+			}
+			
+			
+			private function closeMe():void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+			private function export():void
+			{
+				var file:File = new File();
+				file.addEventListener(Event.SELECT, onExportDirSelected);
+				file.browseForDirectory("Choose Destination");
+			}
+			
+			private function onExportDirSelected(pEvt:Event):void
+			{
+				var exporter:ProjectImportExport = new ProjectImportExport(_project);
+				
+				var includedLgs:Array = null;
+				if(!includeAllCB.selected) 
+				{
+					includedLgs = selectedLanguages.toArray();
+					includedLgs.push(_project.masterLanguage);
+				}
+				
+				exporter.exportForTranslation( pEvt.target as File, 
+												includedLgs, 
+												selectedLanguages.toArray(), 
+												zipCB.selected);
+				
+				closeMe();
+			}
+
+		]]>
+	</mx:Script>
+	
+	<mx:Label x="242.5" y="51" text="Target Languages"/>
+	
+	<mx:List id="allLaguagesList"
+		dragEnabled="true"
+		dataProvider="{_project.languagesNames}"
+		x="10" y="70" width="154.5" height="74"></mx:List>
+
+	<mx:List id="languageList"
+		dropEnabled="true"
+		dataProvider="{selectedLanguages}"
+		x="220.5" y="70" width="153" height="74"></mx:List>
+		
+	<mx:Button x="172" y="82" label="&gt;&gt;"
+		enabled="{ allLaguagesList.selectedItem!=null}"
+		click=" selectedLanguages.addItem( allLaguagesList.selectedItem as String)"/>
+	
+	<mx:Button x="172" y="112" label="&lt;&lt;"
+		enabled="{ languageList.selectedItem!=null}"
+		click="selectedLanguages.removeItemAt( languageList.selectedIndex)"/>
+	
+	<mx:Label x="41" y="51" text="All Languages"/>
+	
+	<mx:Text x="10" y="0" 
+		text="Please select the language(s) you wish to be translated by the recipient of this project." 
+		width="377" height="36" styleName="Note"/>
+		
+	<mx:CheckBox id="zipCB"
+		x="10" y="202" label="Zip the resulting directory" selected="true"/>
+		
+	<mx:CheckBox x="10" y="172" 
+		id="includeAllCB"
+		label="Also include other languages as read-only" 
+		selected="true"/>
+	
+	<mx:ControlBar horizontalAlign="center">
+	
+		<mx:Button label="Cancel"
+			click=" closeMe()"/>
+			
+		<mx:Button label="Export"
+			icon="{(selectedLanguages.length>0)?AssetManager.icon_tick:null}"
+			enabled="{selectedLanguages.length>0}"
+			click=" export()"/>
+			
+	</mx:ControlBar>
+	
+</mx:TitleWindow>

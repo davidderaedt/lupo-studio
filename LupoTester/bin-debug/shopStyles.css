@@ -1,0 +1,30 @@
+/* CSS file */
+Application
+{
+	background-gradient-alphas:1.0, 1.0;
+	background-gradient-colors:#FF8400, #823400;
+}
+
+ApplicationControlBar
+{
+	color:#FFFFFF;
+	fill-colors:#F92D2D, #F92D2D;
+	fill-alphas:1.0, 1.0;
+}
+
+.TitleStyle
+{
+	font-size:24;
+}
+
+Panel
+{
+	/*color:#000000;*/
+	title-style-name:PanelTitle;
+}
+
+.PanelTitle
+{
+	color:#FFFFFF;
+	font-size:14;
+}

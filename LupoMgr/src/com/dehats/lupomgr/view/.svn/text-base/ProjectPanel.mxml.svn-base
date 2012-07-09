@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="250" height="558">
+
+	<mx:Metadata>
+		[Event(name="export", type="flash.events.Event")]		
+		[Event(name="addLanguage", type="flash.events.Event")]
+	</mx:Metadata>
+
+	<mx:Script>
+		<![CDATA[
+			import com.dehats.lupo.presentation.AssetManager;
+			import mx.controls.Alert;
+			import com.dehats.lupo.model.PropFile;
+			import com.dehats.lupomgr.presentation.ProjectPM;
+			import com.dehats.lupomgr.presentation.MainPM;
+			import com.dehats.lupo.model.Project;
+			import com.dehats.lupo.model.ProjectImportExport;
+
+			public static const EVENT_EXPORT:String = "export";
+			public static const EVENT_ADD_LANGUAGE:String = "addLanguage";
+
+			[Bindable]
+			public var pm:ProjectPM;
+			
+			private function flagIconFunction(pItem:Object):Class
+			{
+				return pm.getFlag(pItem.toString().substr(3, 2));
+			}
+			
+			private function getLanguageLabel(pItem:String):String
+			{
+				return pItem+" ("+pm.getLabelByLGCOCode(pItem)+")";
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<mx:Label y="10" right="10" styleName="Note"
+		text="Master: { pm.currentProject.masterLanguage}" />
+
+	<mx:List 
+		dataProvider="{ pm.currentProject.languagesNames}"
+		iconFunction="flagIconFunction"
+		selectable="false"
+		labelFunction="getLanguageLabel"	
+		y="36" height="90" left="10" right="10"></mx:List>
+		
+	<mx:Button label="Add a new language" 
+		toolTip="Open the New Language dialog"
+		click=" dispatchEvent(new Event(EVENT_ADD_LANGUAGE));"
+		icon="{ AssetManager.icon_add_language}"
+		y="133" right="10" left="10"/>	
+		
+	<mx:Label x="11" y="233" text="IMPORT / EXPORT" fontWeight="normal"/>
+	<mx:Label x="10" y="411" text="PROJECT CONTENTS" fontWeight="normal"/>
+	
+	<mx:Button y="259" label="Export for translation"
+		toolTip="Open the Export for translation dialog"
+		icon="{ AssetManager.icon_export}"
+		click=" dispatchEvent(new Event(EVENT_EXPORT));" 
+		left="9" right="10"/>
+		
+	<mx:Button label="Import translations"
+		icon="{ AssetManager.icon_import}"
+		toolTip="Select a lupo translation project LPT file to import its content"
+		click=" pm.promptImportFile()" 
+		y="289" left="9" right="10"/>
+	
+	<mx:Label x="10" y="10" text="LANGUAGES" fontWeight="normal"/>		
+
+	<mx:FileSystemTree id="fsTree"
+		selectable="false"
+		directory="{ pm.contentDirectory}" 
+		left="10" right="10" top="439" bottom="10"/>	
+	<mx:HRule y="189" left="10" right="10"/>
+	<mx:HRule y="355" left="10" right="10"/>
+		
+</mx:Panel>

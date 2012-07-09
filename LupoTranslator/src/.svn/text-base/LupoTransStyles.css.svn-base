@@ -1,0 +1,35 @@
+/* CSS file */
+
+Label.BundleTitle
+{
+	fontSize: 13;
+	fontWeight: normal;
+}
+Canvas.Pan
+{
+	backgroundColor: #FFFFFF;
+	borderColor: #FFFFFF;
+	borderStyle: solid;
+	cornerRadius: 3;
+	dropShadowEnabled: true;
+	backgroundAlpha: 0.83;
+}
+Application
+{
+	backgroundGradientAlphas: 1.0, 1.0;
+	backgroundGradientColors: #ACC3AA, #566756;
+}
+Label.ProjectTitle
+{
+	color: #009D21;
+	fontSize: 13;
+	fontWeight: normal;
+}
+global
+{
+	color: #39453C;
+}
+ComboBox
+{
+	color: #39453C;
+}

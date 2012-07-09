@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="632" height="486"
+	xmlns:view="com.dehats.lupo.view.*">
+
+	<mx:Metadata>
+		[Event(name="preview", type="flash.events.Event")]
+	</mx:Metadata>
+
+	<mx:Script>
+		<![CDATA[
+			import com.dehats.lupo.presentation.LanguagesReference;
+			import flash.utils.setTimeout;
+			import com.dehats.lupo.presentation.AssetManager;
+			import com.dehats.lupo.model.Bundle;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.controls.Alert;
+			import com.dehats.lupo.model.KeyValuePair;
+			import mx.events.DataGridEvent;
+			import mx.events.CloseEvent;
+			import com.dehats.lupo.model.PropFile;
+			import com.dehats.lupo.presentation.TranslationPanelPM;
+			
+			[Bindable]
+			public var pm:TranslationPanelPM;
+			
+			private var tmpPair:KeyValuePair;
+
+			[Bindable] 
+			public var icon_delete:Class = AssetManager.icon_delete;
+			[Bindable] 
+			public var icon_copy:Class = AssetManager.icon_copy;
+			
+			public var useLongLgDescription:Boolean=true;
+			[Bindable]
+			public var showComments:Boolean=true;
+			
+			private function onItemEdition(pEvt:DataGridEvent):void
+			{
+				var field:String = pEvt.dataField;
+				var pair:KeyValuePair = pEvt.itemRenderer.data as KeyValuePair;
+				var newVal:String = pEvt.currentTarget.itemEditorInstance.text;
+
+				if( field=="translation") 
+				{
+					pm.setTranslation(pair, newVal);					
+					
+					// avoid the itemrenderer to render an empty string
+					if(pair.translation==null && newVal==" ")
+					{
+						pEvt.currentTarget.itemEditorInstance.text=null; 
+						dg.destroyItemEditor();
+					} 
+			
+				}
+
+				// prevents from jumping a line
+				if(pm.filterTranslatedItems)
+				{
+					pEvt.preventDefault();
+					dg.destroyItemEditor();
+				} 								
+			}
+
+			
+			public function askRemovePair(pPair:Object):void
+			{
+				tmpPair = pPair as KeyValuePair;
+				
+				Alert.show("Do you really want to remove the translation for this item? (key:"+tmpPair.key+")", 
+							"Warning",
+							Alert.YES|Alert.NO,
+							this,
+							onRemovePairAnswer);				
+			}
+			
+			private function onRemovePairAnswer(pEvt:CloseEvent):void
+			{
+				if( pEvt.detail == Alert.YES) pm.removeTranslationPair(tmpPair);
+				else tmpPair = null;
+			}
+		
+			private function sourceLgLabelFunction(pItem:Object):String
+			{
+				var pFile:PropFile = pItem as PropFile;
+				var name:String;
+				if(useLongLgDescription) name= pm.getLabelByLGCOCode(pFile.language)+" ("+pFile.language+")";
+				else name=pFile.language;
+				
+				if(pFile== pm.bundle.masterPropFile) return name+"*";
+				else return name;
+			}
+
+			
+			private function onComboBoxOpen(pCmb:ComboBox):void
+			{
+				pCmb.dropdown.iconFunction = cmbIconFunc;
+			}
+			private function cmbIconFunc(pItem:Object):Class
+			{
+				var propFile:PropFile = pItem as PropFile;
+				return pm.getFlag( propFile.countryCode.toLowerCase());
+			}
+			
+			public function copyTranslationFromSource(pPair:KeyValuePair):void
+			{
+				pm.setTranslation(pPair, pPair.value);
+			}
+			
+		]]>
+	</mx:Script>
+		
+	<mx:HBox y="10" verticalAlign="middle" left="10">
+	
+		<mx:Label text="From"/>
+		
+		<mx:Image width="16" source="{ pm.sourceLgFlag}"/>
+		
+		<mx:ComboBox id="fromCmb"
+			fontWeight="normal"
+			open="onComboBoxOpen(fromCmb)"
+			selectedItem="{ pm.sourcePropFile}"
+			labelFunction="sourceLgLabelFunction"
+			dataProvider="{ pm.bundle.propFileCollec}"
+			change=" pm.selectSourcePropFile(fromCmb.selectedItem as PropFile )"> </mx:ComboBox>
+			
+		<mx:Label text="to"/>
+		
+		<mx:Image width="16" source="{ pm.translationLgFlag}"/>
+		
+		<mx:ComboBox id="toCmb"
+			open="onComboBoxOpen(toCmb)"
+			fontWeight="normal"
+			labelFunction="sourceLgLabelFunction"
+			selectedIndex="{ pm.bundle.propFileCollec.getItemIndex(pm.translationsPropFile)}"
+			labelField="language"
+			change=" pm.selectTranslationLanguage(toCmb.selectedItem as PropFile)"
+			dataProvider="{ pm.bundle.propFileCollec}"></mx:ComboBox>
+
+		<mx:Image x="283" y="10" 
+			visible="{pm.warningMsg.length>0}"
+			toolTip="{pm.warningMsg}"
+			source="{ AssetManager.icon_warning}"/>
+			
+	</mx:HBox>
+	
+
+	<mx:HBox y="10" right="10">
+		<mx:Image y="10" right="172"
+			source="{ AssetManager.icon_search}"/>
+		<mx:TextInput id="searchTi"
+			text="{pm.searchFilterString}"
+			change=" pm.searchFilterString = searchTi.text"
+			right="10" top="10" width="140"/>
+	
+		<mx:Button label=""
+			width="30"
+			toolTip="Save translations"
+			icon="{ AssetManager.icon_save}"
+			click=" pm.save()"/>
+		<mx:Button label="M"
+			toolTip="Auto translate using the translation memory database"
+			click=" pm.useTranslationMemory()" width="30" paddingLeft="0" paddingRight="0"/>
+		<mx:Button 
+			width="30"
+			toolTip="Preview the .properties file"
+			icon="{AssetManager.icon_preview_file}"
+			click=" dispatchEvent( new Event('preview'))"
+			label=""/>
+		<mx:Button id="optionsToggleBt"
+			toolTip="Open options"
+			toggle="true"
+			width="30"
+			click=" optionsCanvas.includeInLayout=optionsToggleBt.selected"
+			label="+"/>
+		
+	</mx:HBox>	
+		
+	<mx:VBox bottom="10" left="10" right="10" top="50" horizontalAlign="center">
+		<mx:Canvas width="100%" height="93" id="optionsCanvas"
+			includeInLayout="false"
+			visible="{optionsCanvas.includeInLayout}"
+			cornerRadius="3"
+			backgroundColor="#EEEEEE"
+			borderStyle="solid">
+			
+			<mx:CheckBox id="showKeyCB"	x="10" y="28" 
+				label="Show keys" 
+				selected="false"/>
+			<mx:CheckBox id="showCommentsCB" x="10" y="58" 
+				selected="{ showComments}"				
+				change="showComments=showCommentsCB.selected"
+				label="Show Comments"/>
+			<mx:CheckBox id="filterCB"
+				label="Only show untranslated items"
+				selected="{pm.filterTranslatedItems}"
+				change=" pm.filterTranslatedItems = filterCB.selected"
+				x="151" y="28" />
+			<mx:Label x="10" y="6" text="Columns" fontWeight="bold"/>
+			<mx:Label x="151" y="6" text="Filters" fontWeight="bold"/>
+			<mx:CheckBox id="embedFilterCB"
+				label="Don't show Embed items" 
+				x="151" y="58" 			
+				change=" pm.filterEmbedItems = embedFilterCB.selected"
+				selected="{ pm.filterEmbedItems}"/>				
+			<mx:Label x="355" y="6" text="Tools" fontWeight="bold"/>
+			<mx:Button x="355" y="28" label="Remove unused keys"
+				click="pm.removeUnusedEntries();"
+				toolTip="Remove key/value pairs which keys can't be found in the master properties file"/>
+			<mx:Label x="528" y="6" text="CSV" fontWeight="bold"/>				
+			<mx:Button x="528" y="28" label="Export"
+				toolTip="Export bundle to csv"
+				click=" pm.exportToCSV()"/>
+			<mx:Button x="528" y="59" label="Import"
+				toolTip="Import bundle data from a CSV file"
+				click=" pm.importFromCSV()"/>
+		</mx:Canvas>
+		
+		
+		<mx:DataGrid id="dg" left="10" right="10" bottom="10" 
+			enabled="{ pm.translationsPropFile!=null}"
+			itemEditEnd=" onItemEdition(event)"
+			variableRowHeight="true"
+			editable="true"
+			selectable="false"
+			dataProvider="{ pm.keyValuePairCollec }" 
+			top="151" height="100%" width="100%">
+			<mx:columns>
+			
+				<mx:DataGridColumn width="150" color="0x336633"
+					visible="{ showComments}"
+					headerStyleName="DGCommentHeader"
+					headerText="Comments" 
+					wordWrap="true"
+					editable="false" 
+					dataField="comments" />		
+					
+				<mx:DataGridColumn fontWeight="bold" width="160"
+					visible="{ showKeyCB.selected}" 
+					headerText="Key" editable="false" 
+					dataField="key"/>
+					
+				<mx:DataGridColumn fontSize="13" color="#222244" width="300"
+					headerText="Source: { LanguagesReference.getLGNameByCode(pm.sourcePropFile.language.substr(0, 2)) }" 
+					wordWrap="true"				
+					editable="false"
+					dataField="value">
+					    <mx:itemRenderer>
+				    	    <mx:Component>
+				        	    <mx:DataGridItemRenderer selectable="true" />
+				        	</mx:Component>
+					    </mx:itemRenderer>
+				</mx:DataGridColumn>		
+					
+				<mx:DataGridColumn fontSize="13"  color="#000000"
+					headerText="Target: { LanguagesReference.getLGNameByCode(pm.translationsPropFile.language.substr(0, 2) )}" 
+					dataField="translation"
+					editable="{pm.translationIsPermitted}"
+					wordWrap="true"
+					editorUsesEnterKey="true" 
+					itemEditor="mx.controls.TextArea"
+					itemRenderer="com.dehats.lupo.view.TranslationItemRenderer"/>
+	
+				<mx:DataGridColumn width="50"
+					resizable="false"
+					headerText=" " 
+					dataField="value" 
+					editable="false">
+					<mx:itemRenderer>
+						<mx:Component>
+							<mx:Canvas>					
+								<mx:Button label="Copy from source" width="32" horizontalCenter="0" verticalCenter="0" 
+									icon="{ parentDocument.icon_copy}"
+									click="parentDocument.copyTranslationFromSource(data)"/>							
+							</mx:Canvas>
+						</mx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
+				
+				<mx:DataGridColumn width="50"
+					headerText=" " 
+					resizable="false"
+					dataField="value" 
+					editable="false">
+					<mx:itemRenderer>
+						<mx:Component>
+							<mx:Canvas>					
+								<mx:Button label="Delete" width="32" horizontalCenter="0" verticalCenter="0" 
+									icon="{ parentDocument.icon_delete}"
+									click="parentDocument.askRemovePair(data); "/>							
+							</mx:Canvas>
+						</mx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
+				
+			</mx:columns>
+		</mx:DataGrid>
+		<mx:HBox>
+			<mx:Label
+				text="{'Translated: '+pm.transCount+'/'+pm.sourcePropFile.keyValuePairCollec.length+' - Untranslated: '+pm.untransCount+'/'+pm.sourcePropFile.keyValuePairCollec.length+' - Ignored: '+pm.ignoredCount}"/>		
+			<mx:Spacer/>
+				
+			<view:MyProgressBar id="progressBar" 
+				minimum="0" maximum="100"
+				mode="manual"
+				trackHeight="12"
+				progressValue="{Number(pm.progessPC)}"
+				label="{pm.progessPC+' %'}" 
+				labelPlacement="right"  width="200" fontWeight="normal"/>
+				
+			<mx:Label text="{'Word Count: source='+pm.sourceWordCount+', translations='+pm.transWordCount}"/>
+			
+		</mx:HBox>
+		
+	</mx:VBox>
+
+</mx:Canvas>

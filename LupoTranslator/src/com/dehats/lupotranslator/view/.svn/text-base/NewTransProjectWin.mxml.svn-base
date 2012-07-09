@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="444" height="412" 
+	showCloseButton="true"
+	close=" closeMe()"
+	title="New Translation Project">
+
+
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.managers.PopUpManager;
+			import com.dehats.lupotranslator.presentation.AppPM;
+			
+			
+			[Bindable]
+			public var pm:AppPM;
+			[Bindable]
+			private var localeDir:File;
+			
+			private function closeMe():void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+			private function promptBrowseForLocaleDir():void
+			{
+				var f:File = new File();
+				f.browseForDirectory("Please Select your project locale directory");
+				f.addEventListener(Event.SELECT, onLocaleDirSelected);
+			}
+			private function onLocaleDirSelected(pEvt:Event):void
+			{
+				localeDir = pEvt.target as File;
+				localeDirTi.text = localeDir.nativePath;
+			}
+			
+			private function submit():void
+			{
+				var masterDir:File = localeDir.resolvePath(masterLgTi.text);
+				if(masterDir.exists==false) 
+				{
+					Alert.show("Could not find a directory for the provided Master Language", "Error");
+					return;
+				}
+				
+				pm.createNewTranslationProject(localeDir, projectNameTi.text, masterLgTi.text);
+				
+				closeMe();
+			}
+			
+		]]>
+	</mx:Script>
+
+	<mx:Form x="10" y="61">
+		<mx:FormItem label="Project Name">
+			<mx:TextInput id="projectNameTi" text="New Project" width="200"/>
+		</mx:FormItem>
+		<mx:FormItem>
+			<mx:Text text="A name for this project (optional)" styleName="Note" width="250"/>
+		</mx:FormItem>
+		
+		<mx:FormItem label="Locale Directory" direction="horizontal">
+			<mx:TextInput id="localeDirTi" editable="false" width="200"/>
+			<mx:Button label="..." 
+				click=" promptBrowseForLocaleDir()"/>			
+		</mx:FormItem>
+		<mx:FormItem>
+			<mx:Text text="The directory which should contain sub-directories named after the supported languages (usually named 'locale')" styleName="Note" width="250" height="50"/>
+		</mx:FormItem>
+		
+		<mx:FormItem label="Master Language">
+			<mx:TextInput id="masterLgTi"/>
+		</mx:FormItem>
+		<mx:FormItem>
+			<mx:Text text="The source language for the translations (the name should match a sub-directory of the locale folder)" styleName="Note" width="250" height="50"/>
+		</mx:FormItem>
+	</mx:Form>
+	<mx:Text y="10" text="Note: your project must contain a &quot;locale&quot; folder with one sub directory per supported language, eg : MyProject/locale/en_US/data.properties" height="62" left="10" right="10"/>
+	<mx:ControlBar horizontalAlign="center">
+		<mx:Button label="Cancel"
+			click=" closeMe()"/>
+		<mx:Button label="Create"
+			enabled="{localeDir!=null}"
+			click=" submit()"/>
+	</mx:ControlBar>
+	
+</mx:TitleWindow>

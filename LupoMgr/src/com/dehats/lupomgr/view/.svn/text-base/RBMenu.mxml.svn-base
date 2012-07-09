@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="634" height="44" >
+
+	<mx:Script>
+		<![CDATA[
+			import com.dehats.lupomgr.presentation.ProjectPM;
+			import com.dehats.lupo.model.Bundle;
+			import com.dehats.lupo.presentation.AssetManager;
+			
+			[Bindable]
+			public var pm:ProjectPM;
+			
+		]]>
+	</mx:Script>
+		
+	<mx:ComboBox id="bundleList"
+		labelField="shortName"
+		selectedIndex="{ pm.currentProject.bundleCollec.getItemIndex(pm.selectedBundle)}"
+		change=" pm.selectBundle( bundleList.selectedItem as Bundle)"
+		dataProvider="{ pm.currentProject.bundleCollec}"
+		y="15" left="10" width="150"></mx:ComboBox>
+
+	<mx:TextInput id="newBundleTi"
+		toolTip=""
+		y="15" right="95" width="150" text="NewBundleName"/>
+
+	<mx:Button 
+		icon="{ AssetManager.icon_add}"
+		toolTip="Create a new bundle (creates a new properties file in each locale folder)"
+		enabled="{newBundleTi.text.length>0}"
+		click=" pm.createNewBundle(newBundleTi.text)"
+		y="15" label="Create" right="10"/>
+		
+	<mx:Label x="10" y="-1" 
+		text="{pm.currentProject.bundleCollec.length+' bundle(s) in this project'}" 
+		styleName="Note"/>
+		
+	<mx:Button x="168" y="15" label="Save All"
+		icon="{ AssetManager.icon_saveAll}"
+		toolTip="Save All Bundles"
+		click=" pm.currentProject.saveAllBundles()"/>		
+
+</mx:Canvas>

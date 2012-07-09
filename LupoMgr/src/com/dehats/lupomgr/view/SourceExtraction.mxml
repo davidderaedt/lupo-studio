@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="686" height="502"
+	creationComplete=" onCreationComplete()"  
+	xmlns:ns1="com.dehats.lupo.view.*">
+
+	<mx:Script>
+		<![CDATA[
+			import com.dehats.lupo.model.Bundle;
+			import com.dehats.lupomgr.presentation.SourceExtractionPM;
+			import mx.controls.Alert;
+			import com.dehats.lupo.presentation.AssetManager;
+			import com.dehats.lupo.model.KeyValuePair;
+			import mx.controls.textClasses.TextRange;
+			import com.dehats.lupomgr.model.ExtractableSource;
+			import com.dehats.lupomgr.presentation.MasterFilePanelPM;
+			import mx.managers.PopUpManager;
+			
+			// Required for the "alwaysShowSelection" trick
+			import mx.core.mx_internal;
+			use namespace mx_internal;
+			
+			[Bindable]
+			public var pm:SourceExtractionPM;
+			
+			[Bindable]
+			private var extractionHelpText:String;
+		
+			private function onCreationComplete():void
+			{	
+				
+				extractionHelpText="Once you have selected the source file you want to extract, lupo will automatically search for localizable strings and select the first one. You can use the control panel under the source content to navigate through those results, or select a string manually (including the surrounding quotes)." + 
+						"\n\nThe extraction panel lets you choose to what bundle the string will be extracted, what will be the key and, optionally, the comment." + 
+						"\nIt also lets you replace the selected string by some code. A replacement pattern is shown by default, according to the current context: AS3 file, MXML code, or AS3 code in MXML file. You can replace it with your own. In this replacement pattern, '[BUNDLE]' will be replaced by the target bundle name, '[KEY]' by the key name, and '[TYPE]' by the selected value type (String, in most cases). Editing this pattern will also change the default replacement pattern for the selected context during this session." + 
+						"\n\nClicking the Extract button will create the key/value pair in the selected target bundle and replace the string in your source file by the chosen replacement pattern. The Mark as TODO button does not do anything except adding a \"TODO i18n\" comment the line before the selected string.";
+				
+							
+				sourceTa.getTextField().alwaysShowSelection = true;		
+				pm.sourceTa = sourceTa;
+								
+				// automatically get the first string (we have to use callLater because the extraction canvas is not ready at this stage)
+				if(pm.source.searchIndex==-1) callLater(pm.findNext);
+				
+				sourceTa.setFocus();
+			}
+			
+			// File selection
+			
+			private function promptBrowseForSource():void
+			{
+				var file:File = pm.project.src_directory;
+				file.addEventListener(Event.SELECT, onSourceSelected);
+				file.browseForOpen("Please select a source file for extraction");				
+			}
+			
+			private function onSourceSelected(pEvt:Event):void
+			{																
+				pm.setFileList( [pEvt.target as File] );
+			}
+			
+			// dir selection
+			
+			private function promptBrowseForSourceDir():void
+			{
+				var dir:File = pm.project.src_directory;
+				dir.addEventListener(Event.SELECT, onSourceDirectorySelected);
+				dir.browseForDirectory("Select a directory");
+			}
+			
+			private function onSourceDirectorySelected(pEvt:Event):void
+			{
+				pm.setSourceDirectory( pEvt.target as File);
+			}			
+						
+
+			// extraction
+			
+			private function extract(pNext:Boolean=true):void
+			{
+				var replacementText:String = replaceTi.text
+				if(replacementCB.selected==false) replacementText = null;
+				
+				var removeQuotes:Boolean = (defaultsCmb.selectedIndex==0 ||defaultsCmb.selectedIndex==1)
+				
+				pm.extract(keyTi.text, commentTi.text, bundleCmb.selectedItem as Bundle, 
+							replacementText, typeCmb.selectedItem.toString(), defaultsCmb.selectedIndex, removeQuotes, pNext);
+				
+				commentTi.text="";
+
+			}			
+			
+			
+			private function onKeyUp(pEvt:KeyboardEvent):void
+			{
+				if(pEvt.keyCode==69 && extractNextBt.enabled) extract(true);//E
+				if(pEvt.keyCode==39 ) pm.findNext();//right
+				if(pEvt.keyCode==37 ) pm.findNext(true);	//left			
+				if(pEvt.keyCode==38) pm.goToStartIndex();//up
+				if(pEvt.keyCode==40) pm.goToEndIndex();	//down				
+				if(pEvt.keyCode==84 ) pm.markAsTODO();//T
+				if(pEvt.keyCode==78 ) pm.openNextFile();//N					
+			}
+
+		]]>
+	</mx:Script>
+
+	<mx:RegExpValidator id="keyValidator"
+		enabled="{ strictModeCB.selected}"
+		valid=" pm.keyIsValid=true"
+		invalid=" pm.keyIsValid=false"
+		source="{ keyTi}" 
+		property="text" 
+		expression="{ pm.keyValidRegExp}" />
+		
+<!--		-->
+
+	<mx:HBox y="10" left="10" right="10">
+	
+		<mx:Button 
+			toolTip="Extract the content of every source file found in a directory."
+			click=" promptBrowseForSourceDir()"
+			icon="{AssetManager.icon_extract_folder}" />
+
+		<mx:Button
+			toolTip="Extract the content of a single source file"
+			click="promptBrowseForSource();"
+			icon="{AssetManager.icon_extract_file}"
+			 x="360" y="10" />
+
+		<mx:Label x="10" y="13" text="File:"/>
+		
+		<mx:ComboBox id="fileListCmb"
+			rowCount="10"
+			enabled="{pm.fileDescList!=null}" 
+			labelField="name"
+			selectedItem="{pm.source}"
+			toolTip="{pm.source.relativePath}"
+			change=" pm.setSourceFile( fileListCmb.selectedItem as ExtractableSource)"
+			dataProvider="{pm.fileDescList}" 
+			x="43" y="10" width="250"></mx:ComboBox>
+		<mx:Label text="{(fileListCmb.selectedIndex+1)+'/'+pm.fileDescList.length}" styleName="Note"/>
+		
+		<mx:Button label="&amp; Next" 
+			toolTip="Save the changes and open the next file"
+			enabled="{ pm.source!=null}"
+			click=" pm.saveAndNext()"
+			icon="{(pm.source!=null)?AssetManager.icon_save:null}"
+			y="10" right="10"/> 
+		
+		<mx:Button y="10" right="83"
+			toolTip="Save the changes made to this source file"
+			enabled="{ pm.source!=null}"
+			click=" pm.save()"
+			icon="{(pm.source!=null)?AssetManager.icon_save:null}"		
+			/>
+		<mx:Button label="" 
+			icon="{ (pm.source!=null)?AssetManager.icon_undo:null}"
+			enabled="{pm.source!=null}"
+			toolTip="Undo last extraction (and code replacement, if any)"
+			click=" pm.undoLast()"/>
+		<mx:Button label=""
+			toolTip="Cancel all changes made to this source file (extracted pairs will remain in your bundle)"
+			enabled="{ pm.source!=null}"
+			click=" pm.undoAll()"		 
+			icon="{(pm.source!=null)?AssetManager.icon_undoAll:null}"
+			right="146"/>
+			
+		<mx:Spacer width="100%"/>
+			
+		<ns1:HelpButton
+			text="{extractionHelpText}"/>
+
+	</mx:HBox>
+
+
+	<mx:TextArea
+		horizontalScrollPolicy="on"
+		wordWrap="false"
+		styleName="SourceCode"
+		mouseUp="pm.updateSelection()"
+		id="sourceTa"
+		editable="false"
+		text="{ pm.source.fileContent}" 
+		keyUp="onKeyUp(event)"
+		left="0" right="0" top="40" bottom="192"/>
+	<mx:Label text="{'String index: '+(pm.source.searchIndex+1)+' of '+pm.source.searchResult.length} " 
+		bottom="166" styleName="Note" x="10"/>
+
+	<mx:HBox horizontalCenter="0" bottom="166"
+		 enabled="{pm.source!=null &amp;&amp; pm.source.searchResult.length>0}">
+		 
+		<mx:Button label="" tabEnabled="false"
+			icon="{AssetManager.icon_first}"
+			toolTip="First String"
+			enabled="{pm.source.searchIndex!=0}"
+			click="pm.goToStartIndex()" />			
+				
+		<mx:Button label="" tabEnabled="false"
+			icon="{AssetManager.icon_prev}"
+			toolTip="Previous string"
+			enabled="{pm.source.searchIndex!=0}"
+			click=" pm.findNext(true);" />
+
+		<mx:Button label="" tabEnabled="false"
+			icon="{AssetManager.icon_next}"
+			toolTip="Next String"
+			click=" pm.findNext();"/>	
+	
+		<mx:Button label="" tabEnabled="false"
+			toolTip="Last string"
+			icon="{AssetManager.icon_last}"
+			enabled="{pm.source.searchIndex!=pm.source.searchResult.length-1}"
+			click="pm.goToEndIndex()" />
+	</mx:HBox>
+
+		
+	<mx:Canvas height="118" left="10" right="10"
+		borderStyle="solid" verticalScrollPolicy="off"
+		backgroundColor="#DDDDDD"
+		enabled="{pm.source!=null &amp;&amp; pm.defaultKey.length>0}" bottom="40">
+
+		<mx:Label x="10" y="12" text="Extract to"/>
+		<mx:ComboBox x="72" y="11" width="169"
+			id="bundleCmb"
+			toolTip="Select the destination bundle in which the Key / Value pair should be created"
+			labelField="shortName"
+			change="pm.destinationBundle = bundleCmb.selectedItem as Bundle "
+			dataProvider="{ pm.project.bundleCollec}"	></mx:ComboBox>
+		
+		<mx:Label x="249" y="13" text="Key"/>
+		<mx:TextInput y="11"
+			toolTip="The key name which should be added to the bundle"
+			id="keyTi"
+			change=" keyValidator.validate()"
+			enter=" extract()"
+			text="{ pm.defaultKey}" 
+			styleName="SourceCode" left="282" right="232"/>
+			
+		<mx:Label y="13" text="Comment" right="164"/>
+		<mx:TextInput id="commentTi"
+			toolTip="A comment for this Key / Value pair (optional)"
+			enter=" extract();"
+			y="11" right="10" width="146"/>
+			
+<!--			
+		Hidden for now, should be placed into the preferences panel
+-->
+		<mx:CheckBox x="312" y="110"
+			visible="false"
+			id="strictModeCB"
+			change="if(!strictModeCB.selected) pm.keyIsValid=true"
+			label="Use Strict Mode (spaces and special chars are prohibited)" 
+			selected="true"/>
+
+		<mx:HRule y="39" left="10" right="10" height="4"/>
+
+		<mx:CheckBox id="replacementCB"
+			toolTip="Check this box if you want to replace the selected string by some code inside the source file"
+			x="10" y="51" label="Replace by" selected="true"/>
+				
+		<mx:ComboBox y="52" width="110"
+			id="defaultsCmb"
+			toolTip="Code context (changing this will change the default replacement pattern)"
+			selectedIndex="{ pm.selectedReplacementIndex}"			
+			change=" replaceTi.text = defaultsCmb.selectedItem.data"
+			dataProvider="{SourceExtractionPM.defaultReplacements}" right="10"></mx:ComboBox>
+
+		<mx:TextInput id="replaceTi"
+			toolTip="The code that should replace the extracted string in your source file"
+			text="{pm.codeReplacementPattern}"
+			y="52" styleName="SourceCode" left="104" right="343"/>			
+		<mx:Label y="54" text="Context" right="128"/>
+		<mx:TextInput x="182" y="84" id="as3ImportTi" 
+			text="{pm.as3Import}" 
+			change="pm.as3Import = as3ImportTi.text" width="190"/>
+		<mx:TextInput x="451" y="84" 
+			id="mxmlImportTi"
+			text="{pm.mxmlImport}"
+			change="pm.mxmlImport = mxmlImportTi.text" width="190"/>
+		<mx:Label x="10" y="88" text="Import directive for AS3 files"/>
+		<mx:Label x="380" y="88" text="MXML files"/>
+		<mx:Label y="54" text="Type" right="303"/>
+		<mx:ComboBox y="52" width="110" id="typeCmb"
+			selectedIndex="{pm.typeList.getItemIndex(pm.defaultType)}"
+			dataProvider="{pm.typeList}" right="185"></mx:ComboBox>
+			
+	</mx:Canvas>
+	<mx:HBox horizontalCenter="0" bottom="10">
+		<mx:Button label="Mark as TODO" id="todoBt"
+			icon="{todoBt.enabled?AssetManager.icon_todo:null}"
+			enabled="{pm.source!=null &amp;&amp; pm.defaultKey.length>0}"
+			toolTip="Add a 'TODO i18n' comment in your code before this line"
+			click="pm.markAsTODO()"/>
+		<mx:Button label="Extract" id="extractBt"
+			toolTip="Add the Key/Value pair to the bundle"
+			icon="{( pm.keyIsValid)?AssetManager.icon_tick:null}"
+			enabled="{ pm.keyIsValid}"
+			click=" extract(false)"/>
+		<mx:Button label="Extract &amp; Find Next" id="extractNextBt"
+			toolTip="Add the Key/Value pair to the bundle and go to next string"
+			icon="{( pm.keyIsValid)?AssetManager.icon_tick:null}"
+			enabled="{ pm.keyIsValid}"
+			click=" extract()"/>
+	</mx:HBox>
+	
+	<mx:CheckBox label="Use smart search" id="smartSearchCB"
+		change=" ExtractableSource.useSmartSearch = smartSearchCB.selected"
+		toolTip="Excludes strings which should be ignored such as comments, metadatas, ..." right="10" bottom="164"
+		selected="{ ExtractableSource.useSmartSearch}"/>
+
+</mx:Canvas>

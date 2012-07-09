@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" >
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.events.DataGridEvent;
+			import mx.controls.DataGrid;
+			import mx.events.ListEvent;
+			import mx.events.FlexEvent;
+			import mx.core.UITextField;
+			import mx.core.FlexTextField;
+			import com.dehats.lupo.model.KeyValuePair;
+			
+			[Bindable]
+			private var pair:KeyValuePair;
+			[Bindable]			
+			private var isImageFile:Boolean=false;			
+			
+			public var srcDir:File;
+			
+			private var myText:String;
+			
+			override public function set data(value:Object):void
+			{
+				super.data = value;
+				pair = value as KeyValuePair;				
+				
+				isImageFile = false;
+				
+				if(pair.valueIsFile)
+				{
+					
+					// Determine if the asset is an image file				
+					var filePath:String = pair.value.substring(pair.value.indexOf("'")+1, pair.value.lastIndexOf("'") );
+					var dotIndex:int = filePath.lastIndexOf(".");
+					var ext:String = filePath.substr(dotIndex+1).toLowerCase();					
+					
+					if(  ext=="jpeg" || ext=="jpg" || ext=="png" || ext=="gif")
+					{
+						showPic(filePath);
+					}					
+				}
+								
+				super.invalidateDisplayList();
+				
+			}
+
+			public function get text():String
+			{
+				return myText;
+			}
+			
+			private function browseForEmbeddedFile():void
+			{				
+				var f:File = new File();
+				f.addEventListener(Event.SELECT, onFileSelected);
+				f.browseForOpen("Select File to Embed");
+			}
+			
+			private function onFileSelected(pEvt:Event):void
+			{
+				var filePath:String = (pEvt.target as File).nativePath;
+				myText = "Embed('file://" + filePath+ "')";
+				
+				pair.value = myText;
+				
+				showPic(filePath);
+			}
+			
+			private function showPic(filePath:String):void
+			{
+				if(filePath.indexOf("file://")==0) img.source=filePath;
+				else img.source = "file://"+srcDir.resolvePath(filePath).nativePath ; 
+				isImageFile=true;						
+			}
+			
+		]]>
+	</mx:Script>
+
+		
+	<mx:Button label="..."
+		visible="{! isImageFile}"
+		toolTip="Browse for a file to create an Embed directive"
+		click=" browseForEmbeddedFile()" horizontalCenter="0" verticalCenter="0" width="36" height="20"/>
+
+	<mx:Image id="img"
+		visible="{ isImageFile}" 
+		click="browseForEmbeddedFile()" horizontalCenter="0" verticalCenter="0"/>
+
+	
+</mx:Canvas>

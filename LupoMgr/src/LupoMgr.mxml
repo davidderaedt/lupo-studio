@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" 
+						layout="absolute" 
+	showStatusBar="false" 
+	xmlns:view="com.dehats.lupomgr.view.*"	
+	xmlns:lupo="com.dehats.lupo.view.*"
+	xmlns:net="flash.net.*"
+	initialize="onInitialize()"
+	creationComplete="onCreationComplete( )">
+
+
+	<mx:Style source="appStyles.css"/>
+	
+	<mx:XML id="menuData" xmlns="">
+	    <root> 
+	        <AppMenu label='lupo Manager'>
+	            <HelpCommand label='Help'/>			        	            	        
+	            <PrefsCommand label='Preferences'/>			        
+	            <AboutCommand label='About'/>
+	            <UnregisterCommand label='Unregister product'/>	            
+	            <QuitCommand label='Quit' equiv='q'/>
+	        </AppMenu>
+	    
+	        <FileMenu label='File'> 
+	            <OpenCommand label='Open Project' equiv='o'/>
+	            <CreateCommand label='Create Project' equiv='n'/>		            
+	        </FileMenu>
+
+	        <FileMenu label='Edit'>
+	            <CopyCommand label='Copy' equiv='c'/>
+	            <PasteCommand label='Paste' equiv='v'/>		            
+	            <CutCommand label='Cut' equiv='x'/>		            
+	            <SelectAllCommand label='Select All' equiv='a'/>		            			            
+	        </FileMenu>
+
+	        <FileMenu label='Project'>
+	            <ExportCommand label='Export for translation' equiv='e'/>
+	            <ImportCommand label='Import translations' equiv='i'/>		            
+	            <SaveCommand label='Save all bundles' equiv='s'/>		            	            
+	            <RefreshCommand label='Refresh project' equiv='r'/>	            
+	        </FileMenu>
+	        
+	    </root>	
+	</mx:XML>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.dehats.lupomgr.view.PreferenceWin;
+			import com.dehats.lupo.view.LicenseRegistrationWin;
+			import com.dehats.lupo.presentation.AssetManager;
+			import com.dehats.lupomgr.view.NewLanguageDialog;
+			import com.dehats.lupomgr.presentation.MainPM;			
+			import com.dehats.lupomgr.presentation.SourceExtractionPM;
+			import com.dehats.lupomgr.presentation.MasterFilePanelPM;
+			import com.dehats.lupomgr.view.SourceExtraction;
+			import com.dehats.lupomgr.view.ExportForTranslationDialog;			
+			import com.dehats.lupomgr.view.NewProjectDialog;
+			import com.dehats.lupo.view.FilePreview;
+			import com.dehats.lupo.model.PropFile;
+			import mx.events.CloseEvent;			
+			import mx.controls.Alert;
+			import mx.managers.PopUpManager; 
+			import mx.containers.TitleWindow;
+			
+			
+			[Bindable]
+			private var pm:MainPM = new MainPM(); 
+			
+			private var newProjectDialogOpened:Boolean ;
+
+			private function onInitialize():void
+			{
+				pm.addEventListener(MainPM.EVENT_NEW_PROJECT, openNewProjectDialog);
+				pm.addEventListener(MainPM.EVENT_REQUEST_LICENSE, openLicenseDialog); 
+				pm.addEventListener(MainPM.EVENT_EXPORT, openExportDialog);				
+				pm.addEventListener(MainPM.EVENT_PREFS, openPrefsDialog);				
+				
+				pm.init(nativeApplication, menuData);
+			}
+			 
+			private function onCreationComplete():void
+			{								
+				pm.onCreationComplete();
+			}
+			
+	   
+			private function openLicenseDialog(pEvent:Event):void
+			{
+				var dialog:LicenseRegistrationWin = PopUpManager.createPopUp(this, LicenseRegistrationWin, true) as LicenseRegistrationWin;
+				dialog.licenceMgr = pm.licenseMgr;
+				PopUpManager.centerPopUp(dialog);
+			}
+			
+			private function openNewProjectDialog(pEvt:Event):void
+			{	
+				if(newProjectDialogOpened) return;
+				var opd:NewProjectDialog = PopUpManager.createPopUp(this, NewProjectDialog, true) as NewProjectDialog;
+				opd.pm = pm;
+				opd.addEventListener(CloseEvent.CLOSE, onNewProjectDialogClosed);
+				PopUpManager.centerPopUp(opd);			
+				newProjectDialogOpened = true;
+			}
+			private function onNewProjectDialogClosed(pevt:CloseEvent):void{ newProjectDialogOpened=false}
+			
+			private function openExportDialog(pEvt:Event=null):void
+			{
+				var dialog:ExportForTranslationDialog = PopUpManager.createPopUp(this, ExportForTranslationDialog, true) as ExportForTranslationDialog;
+				PopUpManager.centerPopUp(dialog);
+				dialog.project = pm.projectPM.currentProject;
+			}
+			
+			private function openFilePreviewDialog(pPropFile:PropFile):void
+			{
+				var win:FilePreview = PopUpManager.createPopUp(this, FilePreview, true) as FilePreview;
+				PopUpManager.centerPopUp(win);
+				
+				win.content = pPropFile.getContent().replace(/\r\n/g, "\n");
+				win.title = pPropFile.file.name;
+			}
+			
+			private function openNewLanguageDialog():void
+			{
+				var dialog:NewLanguageDialog = PopUpManager.createPopUp(this, NewLanguageDialog, true) as NewLanguageDialog;
+				PopUpManager.centerPopUp(dialog);
+				dialog.pm = pm.projectPM;				
+			}
+
+			private function openPrefsDialog(pEvt:Event=null):void
+			{
+				var dialog:PreferenceWin = PopUpManager.createPopUp(this, PreferenceWin, true) as PreferenceWin;
+				dialog.config = pm.config;
+				PopUpManager.centerPopUp(dialog);				
+			}
+
+			
+		]]>
+	</mx:Script>
+
+	<mx:ViewStack left="10" right="10" top="10" bottom="10" 
+		selectedIndex="{pm.currentPage}">
+		
+		<mx:Canvas id="openingCanvas" width="100%" height="100%">
+			<mx:HBox height="120" horizontalCenter="0" verticalCenter="0" width="543">
+				<mx:Canvas width="50%" height="100%"  backgroundColor="#FFFFFF" borderStyle="solid" cornerRadius="10">
+					<mx:Button label="Open An Existing Project" 
+						icon="{ AssetManager.icon_open_project}"
+						click=" pm.promptOpenProject()" left="10" right="10" height="30" y="10"/>
+					<mx:Text text="Open an existing lupo manager project by selecting the corresponding lupo manager (.lpm) file." 
+						height="57" textAlign="center" bottom="10" styleName="Note" left="0" right="0"/>
+				</mx:Canvas>
+				<mx:Canvas width="50%" height="100%" backgroundColor="#FFFFFF" borderStyle="solid" cornerRadius="10">
+					<mx:Button label="Create A New Project"
+						icon="{AssetManager.icon_create_project}"
+						click=" pm.promptNewProject()" left="10" right="10" height="30" y="10"/>
+					<mx:Text y="48" text="Create a new lupo manager project from an existing application, whether it already contains localization data or not." 
+						height="56" left="0" right="0" textAlign="center" styleName="Note"/>
+				</mx:Canvas>
+				
+			</mx:HBox>
+	
+		</mx:Canvas>
+		
+	
+		<mx:HBox width="100%" height="100%">
+		
+			<view:ProjectPanel
+				title="{ pm.projectPM.currentProject.name}"
+				addLanguage=" openNewLanguageDialog();"
+				export=" openExportDialog();"
+				pm="{pm.projectPM}"
+				height="100%" width="230"/>
+			
+			<mx:TabNavigator height="100%" width="100%" backgroundColor="#EEEEEE"
+				selectedIndex="{pm.currentTab}">
+			
+				<view:SourceExtraction label="Source Extraction"  
+					pm="{pm.extractionPM}"
+					height="100%" width="100%"/>
+			
+				<mx:Canvas label="Resource Bundles"
+					 height="100%" width="100%">
+					 
+					<view:RBMenu
+						pm="{ pm.projectPM}"
+						id="projectpanel1" width="100%"/>				 
+					
+					<mx:TabNavigator left="10" right="10" top="52" bottom="10" >
+					
+						<view:MasterFilePanel label="Bundle Master"
+							enabled="{pm.projectPM.selectedBundle!=null}"
+							preview=" openFilePreviewDialog( pm.projectPM.selectedBundle.masterPropFile)"
+							pm="{ pm.projectPM.masterFilePanelPM}"
+							height="100%" width="100%"/>
+						
+						<lupo:TranslationPanel label="Bundle Translations"
+							showComments="false"
+							useLongLgDescription="false"
+							enabled="{pm.projectPM.currentProject.languagesNames.length>1}"
+							preview=" openFilePreviewDialog( pm.projectPM.translationPanelPM.translationsPropFile)"
+							pm="{ pm.projectPM.translationPanelPM}"
+							height="100%" width="100%"/>
+						
+					</mx:TabNavigator>
+				</mx:Canvas>				
+						
+				<view:CodeGenPanel label="Code Generation" 
+					width="100%" height="100%"
+					flexProjectTools="{pm.projectPM.flexProjectTools}"/>
+				
+			</mx:TabNavigator>
+			
+		</mx:HBox> 
+		
+	</mx:ViewStack>
+
+</mx:WindowedApplication>

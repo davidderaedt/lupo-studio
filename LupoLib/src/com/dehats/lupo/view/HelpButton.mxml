@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Button xmlns:mx="http://www.adobe.com/2006/mxml"
+	width="22"
+	cornerRadius="10"
+	label=""
+	toolTip="{(text.length&lt;100)?text:text.substr(0, 95)+'(...)'}"
+	icon="{ AssetManager.icon_help}"
+	click="onClick()">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import com.dehats.lupo.presentation.AssetManager;
+			
+			[Bindable]
+			public var text:String="";
+			
+			private function onClick():void
+			{
+				var alert:Alert = Alert.show(text, "Help");
+				alert.titleIcon = AssetManager.icon_help;
+			}
+			
+		]]>
+	</mx:Script>
+	
+</mx:Button>

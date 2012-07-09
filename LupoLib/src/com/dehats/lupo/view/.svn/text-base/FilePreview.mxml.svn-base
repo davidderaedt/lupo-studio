@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="800" height="500"
+	showCloseButton="true"
+	close=" closeMe()">
+
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			
+			[Bindable]
+			public var content:String;
+			
+			private function closeMe():void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<mx:TextArea 
+		horizontalScrollPolicy="on"
+		wordWrap="false"
+		styleName="SourceCode"
+		editable="false"
+		id="ta"
+		text="{ content}"
+		left="0" right="0" bottom="0" top="0"/>
+	
+</mx:TitleWindow>

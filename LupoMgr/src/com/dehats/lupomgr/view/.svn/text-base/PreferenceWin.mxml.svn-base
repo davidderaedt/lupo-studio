@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="598" height="416"
+	title="Preferences"
+	close=" closeMe();"
+	showCloseButton="true"
+	creationComplete="onCreationComplete()">
+	
+	
+	<mx:Script>
+		<![CDATA[
+			import com.dehats.lupomgr.model.Config;
+			import com.dehats.lupomgr.model.ExtractableSource;
+			import com.dehats.lupomgr.presentation.SourceExtractionPM;
+			import mx.managers.PopUpManager;
+			import com.dehats.lupo.presentation.AssetManager;
+			
+			[Bindable]
+			public var config:Config;
+			
+			private function onCreationComplete():void
+			{
+				
+			}
+			
+			private function closeMe():void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+			private function save():void
+			{
+				config.mxmlSearchPattern = mxmlPatTi.text;				
+				config.as3SearchPattern = as3patTi.text;
+				
+				config.addBlankLine = blankLineCB.selected;
+				
+				config.replaceAS3 = replaceAS3Ti.text;
+				config.replaceMxml = replaceMXMLTi.text;
+				config.replaceAS3inMXML = replaceAS3InMXMLTi.text;
+				
+				config.useKeyPrefix = prefixKeyCB.selected;
+				
+				config.apply();
+				
+				closeMe();
+			}
+			
+		]]>
+	</mx:Script>
+		
+		
+	<mx:TabNavigator left="10" right="10" top="10" bottom="10" creationPolicy="all">
+	
+		<mx:Canvas label="Source Extraction" width="100%" height="100%">
+
+			<mx:Label x="10" y="10" text="Search engine patterns" fontWeight="bold"/>
+			<mx:Text y="36" styleName="Note"
+				text="Regular expressions used for searching for strings in your source files. You may want to edit them, in particular to add new MXML attributes to look for. Modify them at your own risk, but note you can always switch back to the default values." 
+				right="35" left="10" height="45"/>
+		
+			<mx:Label x="10" y="91" text="MXML search"/>
+			<mx:TextInput id="mxmlPatTi" y="89" 
+				text="{config.mxmlSearchPattern}" left="94" right="54"/>
+				
+			<mx:Label x="10" y="117" text="AS3 search"/>
+			<mx:TextInput id="as3patTi" y="115" 
+				text="{config.as3SearchPattern}" left="94" right="54"/>
+			
+			<mx:Button y="145" label="Switch back to defaults"
+				click=" config.defaultPatterns();" right="92"/>
+
+			<mx:Label x="10" y="280" 
+				text="Default code replacement patterns used during code extraction" 
+				fontWeight="bold"/>
+
+			<mx:Form y="321" left="10" right="35">
+				<mx:FormItem label="AS3" >
+				</mx:FormItem>
+				<mx:FormItem label="MXML">
+				</mx:FormItem>
+				<mx:FormItem label="AS3 in MXML">
+				</mx:FormItem>
+			</mx:Form>
+			<mx:Button y="424" label="Switch back to defaults" right="92"
+				click=" config.defaultReplacements();"/>
+			<mx:HRule y="270" left="10" right="35"/>
+			<mx:HRule y="186" left="10" right="35"/>
+			<mx:Label x="10" y="196" text="Key naming" fontWeight="bold"/>
+			<mx:CheckBox x="10" y="222" id="prefixKeyCB"
+				label="Always prefix key names with the currently extracted file name"
+				selected="{ config.useKeyPrefix}"/>
+			<mx:TextInput width="390" id="replaceAS3Ti"
+				text="{ config.replaceAS3}" x="115" y="322"/>
+			<mx:TextInput width="390" id="replaceMXMLTi"
+				text="{ config.replaceMxml}" x="115" y="350"/>
+			<mx:TextInput width="390" id="replaceAS3InMXMLTi"
+				text="{ config.replaceAS3inMXML}" x="115" y="378"/>
+		
+		</mx:Canvas>		
+
+		<mx:Canvas label="Resource Bundles" width="100%" height="100%">
+			<mx:Label x="10" y="10" text="Properties files" fontWeight="bold"/>
+		
+			<mx:CheckBox x="10" y="36" 
+				label="Insert a blank line between each entry" 
+				id="blankLineCB"
+				selected="{ config.addBlankLine}"/>
+			
+		</mx:Canvas>
+
+		
+	</mx:TabNavigator>
+
+		
+	<mx:ControlBar horizontalAlign="center">
+		<mx:Button label="Cancel"
+			click=" closeMe();"/>
+		<mx:Button label="Save"
+			icon="{ AssetManager.icon_tick}"
+			click=" save();"/>
+	</mx:ControlBar>
+
+	
+</mx:TitleWindow>

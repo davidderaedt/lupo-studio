@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="400" height="190"
+	creationComplete=" focusManager.setFocus(licenseTi)"
+	title="Product Registration">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.dehats.air.LicenseManager;
+			import mx.managers.PopUpManager;
+			import mx.controls.Alert;
+			
+			private var _licenseManager:LicenseManager;
+						
+			public function set licenceMgr(pLM:LicenseManager):void
+			{
+				_licenseManager = pLM;
+				_licenseManager.addEventListener(LicenseManager.EVENT_REGISTRATION_SUCCESSFULL, onRegistrationSuccess);
+				_licenseManager.addEventListener(LicenseManager.EVENT_REGISTRATION_FAILURE, onRegistrationFault);
+				_licenseManager.addEventListener(LicenseManager.EVENT_REGISTRATION_ERROR, onError);
+				
+				
+			}
+			public function get licenceMgr():LicenseManager{return _licenseManager;}
+			
+			
+			private function submit():void
+			{
+				licenceMgr.registerLicense(licenseTi.text);
+			}
+			
+			private function onRegistrationSuccess(pEvt:Event):void
+			{
+				Alert.show("Product registered. Thanks.", "Registration Success");
+				PopUpManager.removePopUp(this);
+			}
+			
+			private function onRegistrationFault(pEvt:Event):void
+			{
+				Alert.show("Unable to register this product key. Please try again.", "Registration Failure");
+			}
+			
+			private function onError(pEvt:Event):void
+			{
+				Alert.show("Unable to contact license registration service. Please make sure your Internet connection is working, and try again.", "Error");
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<mx:Text y="10" text="A license is required to run this software. (You need an Internet connection to register.)&#xd;&#xd;" height="38" left="10" right="25"/>
+	<mx:Label x="10" y="68" text="License"/>
+
+	<mx:TextInput id="licenseTi" y="67" left="67" right="10"
+		maxChars="20"
+		restrict="a-zA-Z0-9"
+		enter=" submit()" styleName="SourceCode"/>
+	
+	<mx:ControlBar verticalAlign="middle" horizontalAlign="center">
+		<mx:Button label="Submit"
+			click=" submit()"
+			enabled="{ licenseTi.text.length==20}"/>
+	</mx:ControlBar>
+	
+	
+	
+</mx:TitleWindow>

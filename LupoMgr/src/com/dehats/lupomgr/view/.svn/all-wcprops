@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/dehats_pfm/!svn/ver/81/trunk/src/com/dehats/lupomgr/view
+END
+MasterFilePanel.mxml
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/dehats_pfm/!svn/ver/78/trunk/src/com/dehats/lupomgr/view/MasterFilePanel.mxml
+END
+ExportForTranslationDialog.mxml
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/dehats_pfm/!svn/ver/75/trunk/src/com/dehats/lupomgr/view/ExportForTranslationDialog.mxml
+END
+IconPreviewRenderer.mxml
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/dehats_pfm/!svn/ver/67/trunk/src/com/dehats/lupomgr/view/IconPreviewRenderer.mxml
+END
+SourceExtraction.mxml
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/dehats_pfm/!svn/ver/73/trunk/src/com/dehats/lupomgr/view/SourceExtraction.mxml
+END
+CodeGenPanel.mxml
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/dehats_pfm/!svn/ver/75/trunk/src/com/dehats/lupomgr/view/CodeGenPanel.mxml
+END
+PreferenceWin.mxml
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/dehats_pfm/!svn/ver/75/trunk/src/com/dehats/lupomgr/view/PreferenceWin.mxml
+END
+NewProjectDialog.mxml
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/dehats_pfm/!svn/ver/81/trunk/src/com/dehats/lupomgr/view/NewProjectDialog.mxml
+END
+NewLanguageDialog.mxml
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/dehats_pfm/!svn/ver/75/trunk/src/com/dehats/lupomgr/view/NewLanguageDialog.mxml
+END
+RBMenu.mxml
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/dehats_pfm/!svn/ver/63/trunk/src/com/dehats/lupomgr/view/RBMenu.mxml
+END
+ProjectPanel.mxml
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/dehats_pfm/!svn/ver/75/trunk/src/com/dehats/lupomgr/view/ProjectPanel.mxml
+END

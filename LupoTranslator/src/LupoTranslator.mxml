@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+	showStatusBar="false"
+	width="900"
+	height="700"
+	initialize="onInitialize()"
+	applicationComplete="onCreationComplete( )"
+	xmlns:ns1="com.dehats.lupo.view.*">
+
+	<mx:Style source="appStyles.css"/>
+	<mx:Style source="LupoTransStyles.css"/>
+
+	<mx:XML id="nativeMenu" xmlns="">
+	    <root> 
+	        <AppMenu label='lupo translator'>
+	            <AboutCommand label='About'/>			        
+	            <HelpCommand label='Help'/>			        	            
+	            <UnregisterCommand label='Unregister product'/>	            	            
+	            <QuitCommand label='Quit' equiv='q'/>
+	        </AppMenu>
+	    
+	        <FileMenu label='File'>
+	            <OpenCommand label='Open Project' equiv='o'/>
+	            <CreateCommand label='Create Project' equiv='n'/>		            
+	            <SaveCommand label='Save' equiv='s'/>		            	            
+	        </FileMenu>
+
+	        <FileMenu label='Edit'>
+	            <CopyCommand label='Copy' equiv='c'/> 
+	            <PasteCommand label='Paste' equiv='v'/>		          
+	            <CutCommand label='Cut' equiv='x'/>
+	            <SelectAllCommand label='Select All' equiv='a'/>		            			            
+	        </FileMenu>	        
+	    </root>		
+	</mx:XML>
+
+	<mx:Script>
+		<![CDATA[
+			import com.dehats.lupo.view.LicenseRegistrationWin;
+			import com.dehats.lupotranslator.view.NewTransProjectWin;
+			import com.dehats.lupo.view.FilePreview;
+			import mx.managers.PopUpManager;
+			import com.dehats.lupo.model.PropFile;
+			import com.dehats.lupo.model.Bundle;
+			import com.dehats.lupotranslator.presentation.AppPM;
+			import com.dehats.lupotranslator.model.PropTranslatorModel;
+			import com.dehats.lupo.presentation.AssetManager;
+			
+			
+			[Bindable]
+			private var pm:AppPM = new AppPM();
+			
+			private function onInitialize():void
+			{
+				pm.addEventListener( AppPM.EVENT_PROJECT_CREATE, showNewProjectDialog);
+				pm.addEventListener( AppPM.EVENT_REQUEST_LICENSE, openLicenseDialog);
+
+				pm.init(this.nativeApplication, nativeMenu);
+				
+			}
+			
+			private function onCreationComplete():void
+			{
+				pm.onCreationComplete();				
+			}
+							
+			public function openFilePreviewDialog():void
+			{
+				var win:FilePreview = PopUpManager.createPopUp(this, FilePreview, true) as FilePreview;
+				PopUpManager.centerPopUp(win);
+				
+				win.content = pm.translationPanelPM.translationsPropFile.getContent().replace(/\r\n/g, "\n");
+				win.title = pm.translationPanelPM.translationsPropFile.file.name;
+			}			
+			
+			private function showNewProjectDialog(pEvt:Event = null):void
+			{
+				var win:NewTransProjectWin = PopUpManager.createPopUp(this, NewTransProjectWin, true) as NewTransProjectWin;
+				PopUpManager.centerPopUp(win);
+				win.pm = pm;
+			}
+
+			private function openLicenseDialog(pEvent:Event):void
+			{
+				var dialog:LicenseRegistrationWin = PopUpManager.createPopUp(this, LicenseRegistrationWin, true) as LicenseRegistrationWin;
+				dialog.licenceMgr = pm.licenseMgr;
+				PopUpManager.centerPopUp(dialog);
+			}
+			
+		]]>
+	</mx:Script>
+
+	<mx:ViewStack id="viewstack1" width="100%" height="100%"
+		selectedIndex="{ pm.currentPage}"> 
+	
+		<mx:Canvas label="View 1" width="100%" height="100%">
+			<mx:HBox width="493" height="126" horizontalCenter="0" verticalCenter="0">
+				<mx:Canvas width="50%" height="100%" styleName="Pan" >
+					<mx:Button label="Open A Translation Project"
+						icon="{ AssetManager.icon_open_project}"
+						click=" pm.promptOpenManifest()" y="10" left="10" right="10" height="30"/>
+					<mx:Text y="48" text="Select a lupo translator project file (*.lpt) created with a lupo software" 
+						left="10" right="10" height="61" styleName="Note"/>
+				</mx:Canvas> 
+				<mx:Canvas width="50%" height="100%" styleName="Pan">
+					<mx:Button label="Create A New Translation Project"
+						icon="{AssetManager.icon_create_project}"
+						click=" showNewProjectDialog()" y="10" left="10" right="10" height="30"/>
+					<mx:Text y="52" text="To work on a project that didn't come with an *.lpt file (make sure the project meets the folder structure requirements)" 
+						left="10" right="10" height="68" styleName="Note"/>
+				</mx:Canvas>				
+			</mx:HBox>
+		</mx:Canvas>
+		
+		<mx:Canvas label="View 2" width="100%" height="100%">		
+
+			<mx:Canvas left="10" top="10" right="10" height="30" paddingTop="4" styleName="Pan">
+			
+				<mx:Label text="{'Project: '+pm.currentProject.name}" x="10" y="4" styleName="ProjectTitle"/>
+				<mx:HBox  y="4" horizontalCenter="0" verticalAlign="bottom">
+					<mx:Label text="Selected Bundle:" horizontalCenter="-241" styleName="BundleTitle"/>
+					<mx:ComboBox id="bundleCmb" 
+						enabled="{pm.currentProject!=null}"
+						labelField="shortName"
+						change=" pm.selectBundle( bundleCmb.selectedItem as Bundle)"
+						dataProvider="{ pm.bundleCollec}"
+					 y="4" horizontalCenter="30"></mx:ComboBox>				
+					<mx:Label text="{'(bundle '+(bundleCmb.selectedIndex+1)+' of '+pm.bundleCollec.length+')'}" styleName="BundleTitle"/>
+				</mx:HBox>		
+				
+			</mx:Canvas>
+		
+			<ns1:TranslationPanel styleName="Pan"
+				bottom="10" left="10" right="10" top="50"  
+				visible="{pm.currentProject!=null}"
+				preview=" openFilePreviewDialog()"
+				pm="{ pm.translationPanelPM}">
+			</ns1:TranslationPanel>
+		
+		
+		</mx:Canvas>
+		
+	</mx:ViewStack>
+	
+	
+</mx:WindowedApplication>

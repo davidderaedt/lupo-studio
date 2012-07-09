@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="462" height="250"
+	creationComplete=" focusManager.setFocus(lgCodeTi)"
+	showCloseButton="true"
+	close=" closeMe();"
+	title="Add New Language">
+	
+	
+	<mx:Script>
+		<![CDATA[
+			import com.dehats.lupo.presentation.AssetManager;
+			import mx.managers.PopUpManager;
+			import com.dehats.lupomgr.presentation.ProjectPM;
+			
+			[Bindable]
+			public var pm:ProjectPM;
+			
+			[Bindable]
+			private var flag:Class ;
+			
+			private function addLanguage(pLg:String):void
+			{
+				var created:Boolean = pm.addLanguageToProject(pLg);
+				
+				if(created) closeMe();
+			}
+			
+			private function closeMe():void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+			private function updateFlag(pCode:String):void
+			{
+				if(pCode.indexOf("_")==-1) return;
+				var ccode:String = pCode.split('_')[1];
+				flag = pm.getFlag(ccode);
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:Label x="10" y="70" text="Language/Locale Code"/>
+	
+	<mx:TextInput x="152" y="70" id="lgCodeTi" width="66" 
+		change=" updateFlag(lgCodeTi.text)" />
+		
+	<mx:Text y="10" 
+		text="Adding a new language wil create a new folder inside your locale folder, named after the provided language code. Inside this new folder, empty properties files will be created for each bundle." 
+		left="10" right="10" height="54" styleName="Note"/>
+	<mx:Label x="248" y="70" text="{pm.getLabelByLGCOCode(lgCodeTi.text)}"/>
+	<mx:Image x="226" y="73" source="{flag}"/> 
+	<mx:Text text="The language code identifies a unique locale. Most of the time, it's a five chars string, where the two first chars are the ISO-639-1 language code and the two last ones the ISO 3166-1-alpha-2 country code. Example : &quot;en_US&quot; (english, United States)" 
+		left="10" right="10" top="97" styleName="Note" height="62"/>
+	
+	<mx:ControlBar horizontalAlign="center">
+		<mx:Button label="Cancel"
+			click=" closeMe()"/>
+		<mx:Button label="Add This Language"
+			icon="{(lgCodeTi.text.length>0)?AssetManager.icon_tick:null}"
+			enabled="{ lgCodeTi.text.length>0}"
+			click=" addLanguage( lgCodeTi.text);"/>
+	</mx:ControlBar>
+	
+</mx:TitleWindow>

@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="614" height="748"
+	creationComplete="onCreationComplete()"
+	show="onShow();" xmlns:view="com.dehats.lupo.view.*">
+
+	<mx:Script>
+		<![CDATA[
+			import com.dehats.lupo.presentation.AssetManager;
+			import mx.controls.Alert;
+			import com.dehats.lupo.model.Bundle;
+			import com.dehats.lupomgr.model.CodeGenToolsForFlex;
+		
+			[Bindable]
+			public var compilerArgs:String;
+			[Bindable]
+			public var compilerArgsToGetRBNames:String;
+			[Bindable]
+			public var commandsToCompileRBs:String;		
+			[Bindable]
+			public var copyLocaleCmds:String;
+			[Bindable]
+			public var metadatas:String;
+			[Bindable]
+			public var metadatasMXML:String;			
+			[Bindable]
+			public var sampleCode:String;
+			[Bindable]
+			public var sampleComboCode:String;
+			[Bindable]
+			public var sampleBundleCode:String;
+			
+			[Bindable]			
+			public var flexProjectTools:CodeGenToolsForFlex;
+		
+			private var sampleTemplate1:String;			
+			private var sampleTemplate2:String;
+			
+			[Bindable]
+			private var templateHelp:String
+
+			[Bindable]			
+			private var codeDestinationFile:File;
+			
+			private function onCreationComplete():void
+			{
+				sampleTemplate1='public static const [ucKEY]:String="[KEY]";\n';
+				
+				sampleTemplate2 = '[Bindable("change")]\n';
+				sampleTemplate2+="public function get [lcKEY]():[TYPE]{\n";
+				sampleTemplate2+="\treturn resourceManager.get[TYPE]('[BUNDLE]', '[KEY]');\n}\n\n";									
+
+				// templateInfo
+				templateHelp="This tool lets you generate code for each key/value pair of the selected bundle based on the provided template.\n";
+				templateHelp+="Click on the sample templates and edit it to adapt it to your needs, then select the target bundle and click on the Generate Button.\n\nSupported Keywords:\n\n";
+				templateHelp+="[KEY] : The key of the key/value pair\n";
+				templateHelp+="[lcKEY] : The key, to lower case\n";
+				templateHelp+="[ucKEY] : The key, to upper case\n";
+				templateHelp+="[BUNDLE] : The name of the selected bundle\n";
+				templateHelp+="[TYPE] : The data type, either 'String' or 'Class' \n";
+				
+				codeDestinationFile = flexProjectTools.getAppFile();
+				
+			}
+				
+			private function onShow():void
+			{
+				compilerArgs = flexProjectTools.getCommandLineArgs();
+				compilerArgsToGetRBNames = flexProjectTools.getResourceModulesNamesCommandLineArgs();
+				commandsToCompileRBs = flexProjectTools.getResourceModuleCommandLines(RBNameList.text);
+				copyLocaleCmds = flexProjectTools.getCopyLocaleCommandLine();
+				metadatas = flexProjectTools.getBundlesMetadatas().replace(/\r\n/g, "\n");
+				metadatasMXML = flexProjectTools.getBundlesMetadatas(true).replace(/\r\n/g, "\n");
+				sampleComboCode = flexProjectTools.getSampleComboBox().replace(/\r\n/g, "\n");
+				sampleCode = flexProjectTools.getSampleCode();
+				
+			}
+			
+			private function updateSampleBundleCode():void
+			{
+				sampleBundleCode = flexProjectTools.getAS3Code( (bundleCmb.selectedItem as Bundle).masterPropFile, templateTa.text);				
+			}
+									
+		]]>
+	</mx:Script>
+	<mx:TabNavigator left="10" right="10" bottom="10" top="10">
+	
+	
+		<mx:Canvas icon="{AssetManager.icon_commandline}" label="Compiler" width="100%" height="100%">
+			<mx:Label x="10" y="15" text="Compiler Arguments" fontWeight="normal"/>
+			<mx:TextInput 
+				text="{ compilerArgs}" 
+				styleName="SourceCode"
+				y="41" 
+				editable="false" left="10" right="10"/>
+			<mx:Label x="10" y="109" text="Framework Resource Copies" fontWeight="normal"/>
+			<mx:TextArea 
+				horizontalScrollPolicy="on"
+				wordWrap="false"
+				editable="false"
+				styleName="SourceCode"
+				y="135" 
+				text="{ copyLocaleCmds}" 
+				height="60" left="10" right="10"/>
+			<mx:Canvas y="271" height="258" left="10" right="10" borderStyle="solid" >
+				<mx:TextArea 
+					text="{commandsToCompileRBs}"
+					styleName="SourceCode"
+					horizontalScrollPolicy="on"
+					y="146" height="100" left="10" right="10" wordWrap="false"/>
+				<mx:Label x="10" y="8" text="1. Compiler arguments to retrieve resource bundles names for Resource Modules"/>
+				<mx:TextInput 
+					text="{ compilerArgsToGetRBNames}" 
+					styleName="SourceCode"
+					y="36" 
+					editable="false" left="10" right="10"/>
+				<mx:Label x="10" y="66" text="2. Insert resulting name list here (replace the default values)"/>
+				<mx:TextInput y="92" left="10" right="10"
+					styleName="SourceCode"
+					change=" commandsToCompileRBs = flexProjectTools.getResourceModuleCommandLines(RBNameList.text);"
+					text="collections,containers,controls,core"
+					id="RBNameList"/>
+				<mx:Label x="10" y="122" text="3. Compile resource modules with these command lines"/>
+			</mx:Canvas>
+			<mx:Label x="10" y="245" text="Resource Modules" fontWeight="normal"/>
+			<view:HelpButton 
+				text="These are the compiler arguments you should use to compile resource bundles into your application. If you compile your application using Flex Builder, paste the following text in the &quot;Additional compiler arguments&quot; box (in addition to any existing arguments)"  
+				x="140" y="13" />
+			<view:HelpButton 
+				text="If you encounter compile errors such as : &quot;unable to open '[SDK]/frameworks/locale/[SOME_LOCALE]' &quot;, then you need to have the flex framework localized in the corresponding locales. You can execute these command lines to copy en_US resources for each of those languages."
+				x="190" y="107"/>
+			<view:HelpButton 
+				text="If you want to load resource bundles at runtime, follow these steps to create each locale's SWF file"
+				x="125" y="243"/>
+				
+		</mx:Canvas>
+		
+
+		<mx:Canvas  icon="{AssetManager.icon_actionscript}" label="AS3 and MXML" width="100%" height="100%">
+			<mx:Label x="324" y="10" 
+				text="Bundle Declarations Metadatas (AS3)"/>
+			<mx:Label x="10" y="10" 
+				text="Bundle Declarations Metadatas (MXML)"/>
+			<mx:TextArea 
+				editable="false"
+				styleName="SourceCode"
+				x="324" y="36"
+				text="{ metadatas}" 
+				width="262" height="60"/>
+			<mx:TextArea 
+				editable="false"
+				styleName="SourceCode"
+				x="10" y="36" 
+				text="{ metadatasMXML}" 
+				width="264" height="60"/>
+			<mx:Label x="10" y="298" 
+				text="Sample Code : language list and runtime locale switch method"/>
+			<mx:TextArea 
+				text="{sampleCode}"
+				styleName="SourceCode"
+				x="10" y="324" width="572" height="100"/>
+				
+
+			<mx:TextArea 
+				text="{sampleComboCode}"
+				y="189" height="101" right="10" left="10" styleName="SourceCode"/>
+			<mx:Label x="10" y="161" text="Quick Test ComboBox"/>
+			<view:HelpButton x="147" y="159"
+				text="Paste this all-in-one ComboBox in any MXML file to quickly test localization during development.(Not intended to be used in production)"/>
+			<view:HelpButton x="374" y="296"
+				text="Simple AS3 code to help you implement the runtime locale switch logic"/>
+			<view:HelpButton x="244" y="8"
+				text="You need to use these metadatas in any MXML or AS3 file of your application in order to compile the necessary bundles with your application"/>
+
+			
+			<mx:HBox x="10" y="104" >
+				<mx:Label text="Insert into"/>
+				<mx:Label text="{codeDestinationFile.name}"/>
+				<mx:Button label="Insert"
+					enabled="{ codeDestinationFile!=null}"
+					click=" flexProjectTools.putMetadatas(codeDestinationFile)"/>
+				<view:HelpButton
+					text="Automatically inserts ResourceBundle MXML metadatas in an MXML file"/>
+			</mx:HBox>
+			
+		</mx:Canvas>
+		
+		<mx:Canvas icon="{ AssetManager.icon_codegen}" label="Custom Generation" width="100%" height="100%">
+		
+			<mx:ComboBox x="101" y="213" id="bundleCmb"
+				dataProvider="{ flexProjectTools.project.bundleCollec}"
+				labelField="shortName"></mx:ComboBox>				
+				
+			<mx:TextArea id="templateTa"
+				horizontalScrollPolicy="on"
+				wordWrap="false"				
+				styleName="SourceCode" right="10" left="10" top="39" height="168"/>
+				
+			<mx:Button y="215" label="Generate"
+				icon="{ AssetManager.icon_cog}"
+				click=" updateSampleBundleCode()" horizontalCenter="0"/>
+
+			<mx:Label x="10" y="11" text="Template"/>
+
+			<mx:Label x="10" y="215" text="Target Bundle"/>							
+
+
+			<mx:TextArea 
+				horizontalScrollPolicy="on"
+				wordWrap="false"
+				text="{sampleBundleCode}"
+				left="10" top="243" bottom="10" right="10" styleName="SourceCode"/>
+								
+			<mx:Label y="11" text="Sample Templates" right="107"/>
+				
+			<mx:Button y="10" label="1"
+				click=" templateTa.text = sampleTemplate1" right="59"/>
+			<mx:Button y="10" label="2"
+				click=" templateTa.text = sampleTemplate2" right="11"/>
+			<view:HelpButton 
+				text="{templateHelp}"
+				x="76" y="9"/>
+		
+		</mx:Canvas>
+		
+		
+	</mx:TabNavigator>
+
+	
+</mx:Canvas>

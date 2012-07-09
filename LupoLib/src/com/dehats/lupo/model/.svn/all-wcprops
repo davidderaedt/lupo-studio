@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/dehats-pfmlib/!svn/ver/49/trunk/PropMgrLib/src/com/dehats/lupo/model
+END
+PropFileParser.as
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/dehats-pfmlib/!svn/ver/49/trunk/PropMgrLib/src/com/dehats/lupo/model/PropFileParser.as
+END
+PropFile.as
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/dehats-pfmlib/!svn/ver/45/trunk/PropMgrLib/src/com/dehats/lupo/model/PropFile.as
+END
+KeyValuePair.as
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/dehats-pfmlib/!svn/ver/48/trunk/PropMgrLib/src/com/dehats/lupo/model/KeyValuePair.as
+END
+ProjectImportExport.as
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/dehats-pfmlib/!svn/ver/32/trunk/PropMgrLib/src/com/dehats/lupo/model/ProjectImportExport.as
+END
+Project.as
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/dehats-pfmlib/!svn/ver/36/trunk/PropMgrLib/src/com/dehats/lupo/model/Project.as
+END
+TranslationMemory.as
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/dehats-pfmlib/!svn/ver/46/trunk/PropMgrLib/src/com/dehats/lupo/model/TranslationMemory.as
+END
+CSVExportImport.as
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/dehats-pfmlib/!svn/ver/54/trunk/PropMgrLib/src/com/dehats/lupo/model/CSVExportImport.as
+END
+Bundle.as
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/dehats-pfmlib/!svn/ver/51/trunk/PropMgrLib/src/com/dehats/lupo/model/Bundle.as
+END

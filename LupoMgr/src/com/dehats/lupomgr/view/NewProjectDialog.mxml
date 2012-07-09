@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"  
+	title="New Localization Project"
+	creationComplete=" browseForSourceBt.setFocus()"
+	close=" closeMe()"
+	showCloseButton="true"  xmlns:ns1="com.dehats.lupo.view.*">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.events.CloseEvent;
+			import com.dehats.lupo.presentation.AssetManager;
+			import com.dehats.lupomgr.presentation.MainPM;
+			import mx.managers.PopUpManager;
+			
+			public static const EVENT_CHANGE:String = "change";
+			
+			[Bindable]
+			public var pm:MainPM;
+			
+
+			private var localeDir:File;
+			private var srcDir:File;
+			
+			[Bindable]
+			private var hasExistingData:Boolean=false;
+			
+			private function createProject():void
+			{	
+				var defaultBundleName:String = null;
+				
+				if(defaultBundleCB.selected) defaultBundleName = defaultBundleNameTi.text ;
+				
+				pm.createProject(nameTi.text, masterLgTi.text, localeDir, srcDir, defaultBundleName); 
+				
+				closeMe();
+			}
+
+
+			private function promptBrowseForSrc():void
+			{
+				var srcDir:File = new File();
+				srcDir.addEventListener(Event.SELECT, onSrcDirSelected);
+				srcDir.browseForDirectory("Select your application source (src) directory");
+			}
+
+			private function onSrcDirSelected(pEvt:Event):void
+			{
+				srcDir  = (pEvt.target as File);
+				
+				sourceDirTi.text = srcDir.nativePath;
+				
+				nameTi.text = srcDir.parent.name;
+				
+				var tmpLocaleDir:File = srcDir.resolvePath("locale");
+				
+				if(! tmpLocaleDir.exists)
+				{
+					tmpLocaleDir.createDirectory();
+				}
+			
+				setLocaleDir(tmpLocaleDir);
+				
+				srcDir.removeEventListener(Event.SELECT, onSrcDirSelected);
+			}
+
+									
+			private function promptBrowseForLocale():void
+			{
+				var localeDir:File = new File();
+				localeDir.addEventListener(Event.SELECT, onLocaleDirSelected);
+				localeDir.browseForDirectory("Select the main locale directory");
+			}
+			
+			private function onLocaleDirSelected(pEvt:Event):void
+			{
+				setLocaleDir(pEvt.target as File);
+			}
+			 
+			private function setLocaleDir(pDir:File):void
+			{
+				localeDir = pDir;
+				localeDirTi.text = localeDir.nativePath;
+				var contents:Array = localeDir.getDirectoryListing();
+				hasExistingData = contents.length>0;
+				
+				dispatchEvent(new Event(EVENT_CHANGE));				
+			} 
+			 
+			
+			[Bindable("change")]
+			private function get creationEnabled():Boolean
+			{
+				return (	nameTi.text.length>0 && 
+							masterLgTi.text.length>0 && 
+							srcDir.isDirectory);
+			}
+			
+			private function closeMe():void
+			{								
+				PopUpManager.removePopUp(this);
+			}
+						
+
+		]]>
+	</mx:Script>
+	<mx:Form y="41" left="10" right="10">
+	
+		<mx:FormItem label="Source Directory" direction="horizontal">
+			<mx:TextInput editable="false" id="sourceDirTi" width="250"/>
+			<mx:Button id="browseForSourceBt" label="..."
+				click=" promptBrowseForSrc()"/>			
+		</mx:FormItem>
+		<mx:FormItem>
+			<mx:Text text="The source directory for your application (typically named &quot;src&quot;)." 
+				width="320" styleName="Note"/>
+		</mx:FormItem>
+		<mx:FormItem label="Locale Directory" direction="horizontal">
+			<mx:TextInput editable="false" id="localeDirTi" width="250"/>
+			<mx:Button  label="..."
+				click=" promptBrowseForLocale()"/>			
+			<ns1:HelpButton
+				text="If your application project already contains localized data, lupo will automatically import it. Just make sure it is organized as follows: the locale folder must contain one sub directory per supported language, and properties files must be placed inside those sub directories, eg: locale/en_US/bundleA.properties, locale/es_ES/bundleA.properties, locale/en_US/bundleB.properties, locale/es_ES/bundleB.properties"/>
+		</mx:FormItem>
+		<mx:FormItem>
+			<mx:Text text="The parent directory for localized data (typically named &quot;locale&quot;). If it does not exist yet, it will be created for you." 
+				width="320" styleName="Note"/>
+		</mx:FormItem>
+	
+		<mx:FormItem label="Project Name">
+			<mx:TextInput id="nameTi"
+				change="dispatchEvent(new Event(EVENT_CHANGE));"/>
+			<mx:Text text="This name will be used to create the project *.lpm file and has absolutely no influence on your code." 
+				width="320" styleName="Note"/>				
+		</mx:FormItem>
+		<mx:FormItem label="Master Language">
+			<mx:TextInput id="masterLgTi"
+				change="dispatchEvent(new Event(EVENT_CHANGE));" 
+				text="en_US"/>
+		</mx:FormItem>
+		<mx:FormItem>
+			<mx:Text text="The language in which the application was developped. It will be considered as the source language for translations." 
+				width="320" styleName="Note"/>
+		</mx:FormItem>
+		<mx:FormItem label="Default Bundle">
+			<mx:CheckBox id="defaultBundleCB" 
+				label="Create a default Bundle" 
+				selected="{!hasExistingData}"/>
+		</mx:FormItem>
+		<mx:FormItem label="Default Bundle Name" 
+			enabled="{defaultBundleCB.selected}">
+			<mx:TextInput 
+				restrict="a-zA-Z_0-9"
+				text="Main"
+				id="defaultBundleNameTi"/>
+		</mx:FormItem>
+		<mx:FormItem>
+			<mx:Text text="Automatically creates a default properties file in your master language directory. Uncheck this option if your project already contains properties files." 
+				width="320" styleName="Note"/>
+		</mx:FormItem>
+		
+	</mx:Form>
+	<mx:Label y="10" text="Remember to always backup your project before using this software !" 
+		fontStyle="italic" horizontalCenter="0" fontSize="12"/>
+	
+	<mx:ControlBar horizontalAlign="center">
+
+		<mx:Button label="Cancel"
+			click=" dispatchEvent(new CloseEvent(CloseEvent.CLOSE));"/>
+	
+		<mx:Button label="Create"
+			icon="{(creationEnabled)?AssetManager.icon_tick:null}"
+			enabled="{ creationEnabled}"
+			click=" createProject()"/>
+		
+	</mx:ControlBar>
+	
+</mx:TitleWindow>
